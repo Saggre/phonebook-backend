@@ -2,13 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+
 const app = express();
 const errorHandler = require('./middleware/errorHandler');
 const Person = require('./models/person');
 
-morgan.token('body', function (req, res) {
-    return JSON.stringify(req.body);
-});
+morgan.token('body', (req) => JSON.stringify(req.body));
 
 app.use(express.static('build'));
 app.use(express.json());
@@ -16,83 +15,84 @@ app.use(cors());
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 
 app.get('/info', (req, res, next) => {
-    Person.find({}).then(persons => {
-        res.write(`Phonebook has info for ${persons.length} people\n\n`);
-        res.write(new Date().toString());
-        res.end();
-    }).catch(error => next(error));
+  Person.find({}).then((persons) => {
+    res.write(`Phonebook has info for ${persons.length} people\n\n`);
+    res.write(new Date().toString());
+    res.end();
+  }).catch((error) => next(error));
 });
 
 app.get('/api/persons', (req, res, next) => {
-    Person.find({}).then(persons => {
-        res.json(persons.map(person => person.toJSON()));
-    }).catch(error => next(error));
+  Person.find({}).then((persons) => {
+    res.json(persons.map((person) => person.toJSON()));
+  }).catch((error) => next(error));
 });
 
 app.get('/api/persons/:id', (req, res, next) => {
-    Person.findById(req.params.id)
-        .then(person => {
-            if (!person) {
-                res.status(404).end();
-            }
+  Person.findById(req.params.id)
+    .then((person) => {
+      if (!person) {
+        res.status(404).end();
+      }
 
-            return person;
-        })
-        .then(person => person.toJSON())
-        .then(personJson => {
-            res.json(personJson);
-        }).catch(error => next(error));
+      return person;
+    })
+    .then((person) => person.toJSON())
+    .then((personJson) => {
+      res.json(personJson);
+    })
+    .catch((error) => next(error));
 });
 
 app.post('/api/persons', (req, res, next) => {
-    const body = req.body;
+  const { body } = req;
 
-    const person = new Person({
-        name: body.name,
-        number: body.number
-    });
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  });
 
-    person.save()
-        .then(person => person.toJSON())
-        .then(personJson => {
-            res.json(personJson);
-        }).catch(error => next(error));
+  person.save()
+    .then((p) => p.toJSON())
+    .then((personJson) => {
+      res.json(personJson);
+    }).catch((error) => next(error));
 });
 
 app.put('/api/persons/:id', (req, res, next) => {
-    const body = req.body;
+  const { body } = req;
 
-    const person = {
-        name: body.name,
-        number: body.number
-    };
+  const person = {
+    name: body.name,
+    number: body.number,
+  };
 
-    Person.findByIdAndUpdate(req.params.id, person, {
-        new: true,
-        runValidators: true,
-        context: 'query'
+  Person.findByIdAndUpdate(req.params.id, person, {
+    new: true,
+    runValidators: true,
+    context: 'query',
+  })
+    .then((p) => {
+      res.json(p);
     })
-        .then(person => {
-            res.json(person);
-        })
-        .catch(error => next(error));
+    .catch((error) => next(error));
 });
 
 app.delete('/api/persons/:id', (req, res, next) => {
-    Person.findByIdAndRemove(req.params.id)
-        .then(result => {
-            res.status(204).end();
-        })
-        .catch(error => next(error));
+  Person.findByIdAndRemove(req.params.id)
+    .then(() => {
+      res.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
 app.use((req, res) => {
-    res.status(404).send({error: 'unknown endpoint'});
+  res.status(404).send({ error: 'unknown endpoint' });
 });
 
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
