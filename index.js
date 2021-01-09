@@ -15,6 +15,14 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 
+app.get('/info', (req, res, next) => {
+    Person.find({}).then(persons => {
+        res.write(`Phonebook has info for ${persons.length} people\n\n`);
+        res.write(new Date().toString());
+        res.end();
+    }).catch(error => next(error));
+});
+
 app.get('/api/persons', (req, res, next) => {
     Person.find({}).then(persons => {
         res.json(persons.map(person => person.toJSON()));
