@@ -17,11 +17,18 @@ const personSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        minlength: 3,
     },
     number: {
         type: String,
-        required: true
+        required: true,
+        validate: {
+            validator: function (str) {
+                return ((str || '').match(/\d/g) || []).length >= 8;
+            },
+            message: 'Provided phone number doesn\'t have enough digits'
+        }
     },
 });
 
